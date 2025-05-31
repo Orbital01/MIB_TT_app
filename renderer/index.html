@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SD Card Formatter</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div id="loadingOverlay">
+    <div class="loaderWrapper">
+        <div class="loaderRing"></div>
+        <div class="logoContainer">
+            <img src="../assets/logo.jpeg" alt="App Logo" class="circleLogo">
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <header>
+        <h1>🔧 MIB SD Card tool</h1>
+        <h2>Formatta SD card e installa pacchetto M.I.B</h2>
+        <p>Made by the Audi TT mk3 ita community</p>
+    </header>
+
+    <main>
+        <!-- Sezione Drive Selection -->
+        <section class="card">
+            <h2>📱 Selezione Drive</h2>
+            <div class="form-group">
+                <label for="driveSelect">Drive disponibili:</label>
+                <select id="driveSelect" class="form-control">
+                    <option value="">Seleziona un drive...</option>
+                </select>
+                <button id="refreshDrives" class="btn btn-secondary">🔄 Aggiorna</button>
+            </div>
+        </section>
+
+
+        <!-- Sezione Actions -->
+        <section class="card">
+            <h2>🚀 Azioni</h2>
+            <div class="actions-grid">
+                <button id="bottone" class="btn btn-primary" disabled>
+                    ⚡ Formatta e Installa M.I.B
+                </button>
+            </div>
+        </section>
+
+        <!-- Progress Section -->
+        <section class="card" id="progressSection" style="display: none;">
+            <h2>⏳ Progresso</h2>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+                <div id="progressText" class="progress-text">Inizializzazione...</div>
+            </div>
+        </section>
+
+        <!-- Log Section -->
+        <section class="card">
+            <h2>📝 Log Operazioni</h2>
+            <div class="log-container">
+                <div id="logOutput" class="log-output"></div>
+                <!--<button id="clearLog" class="btn btn-secondary btn-small">🗑️ Pulisci Log</button> -->
+            </div>
+        </section>
+    </main>
+</div>
+
+<script src="renderer.js"></script>
+</body>
+</html>
