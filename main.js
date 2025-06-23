@@ -120,9 +120,7 @@ ipcMain.handle('get-drives', async () => {
             if (platform === 'darwin') {
                 // Su macOS: includi solo volumi in /Volumes escluso il disco principale
                 return (
-                    mount.startsWith('/volumes/') &&
-                    !drive.device.includes('/dev/disk1')
-
+                    mount.startsWith('/volumes/')
                 );
             }
 
