@@ -78,43 +78,10 @@ ipcMain.handle('get-drives', async () => {
             const mount = (drive.mounted || '').toLowerCase();
 
             if (platform === 'win32') {
-                // Windows: approccio più flessibile per rilevare drive rimovibili
 
-                // Escludi sempre il drive C: (sistema)
-                if (mount === 'c:\\') {
-                    return false;
-                }
-
-                // Controlla se è una lettera di drive valida (A-Z:\)
-                const isDriveLetter = /^[A-Z]:\\$/.test(drive.mounted);
-
-                if (!isDriveLetter) {
-                    return false;
-                }
-
-                // Include drive che:
-                // 1. Hanno "removable" nella descrizione, OPPURE
-                // 2. Hanno filesystem FAT32/FAT/exFAT (tipici di SD/USB), OPPURE
-                // 3. Sono drive con lettere D: e successive (escludendo C:)
-                const isRemovableByDescription = drive.description &&
-                    drive.description.toLowerCase().includes('removable');
-
-                const isRemovableByFilesystem = drive.filesystem &&
-                    /^(fat32|fat|exfat|ntfs)$/i.test(drive.filesystem);
-
-                const isNonSystemDrive = /^[D-Z]:\\$/.test(drive.mounted);
-
-                // Aggiungi controlli aggiuntivi per SD card e USB
-                const isLikelyRemovable = drive.description && (
-                    drive.description.toLowerCase().includes('sd') ||
-                    drive.description.toLowerCase().includes('usb') ||
-                    drive.description.toLowerCase().includes('flash') ||
-                    drive.description.toLowerCase().includes('card')
-                );
-
-                return isRemovableByDescription ||
-                    isLikelyRemovable ||
-                    (isNonSystemDrive && isRemovableByFilesystem);
+                // Skip if mount is 'C:\'
+                if (mount === 'C:\\') return false;
+                return mount;
             }
 
             if (platform === 'darwin') {
