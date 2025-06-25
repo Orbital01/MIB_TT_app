@@ -42,6 +42,7 @@
       "assets/**/*",
       "node_modules/**/*"
     ],
+    "icon": "assets/logo.ico",
     "win": {
       "target": [
         {
@@ -58,7 +59,7 @@
     },
     "mac": {
       "target": "dmg",
-      "icon": "assets/icon.icns"
+      "icon": "assets/logo.icns"
     },
     "linux": {
       "target": [

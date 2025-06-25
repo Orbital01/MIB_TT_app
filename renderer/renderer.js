@@ -186,7 +186,7 @@ class SDFormatterApp {
     updateButtonStates() {
         const hasDrive = this.selectedDrive !== null;
         if (hasDrive) {
-            this.log(`Drive selezionato: ${this.selectedDrive.device}`);
+            this.log(`Drive selezionato: ${this.selectedDrive.mountPoint}`);
             this.formatAndCopyBtn.disabled = false;
             this.formatAndCopyBtn.classList.remove('disabled');
         }
@@ -202,7 +202,7 @@ class SDFormatterApp {
 
         const confirmed = await this.confirmDangerousAction(
             'Conferma Formattazione e Copia',
-            `Formattare ${this.selectedDrive.device} e copiare M.I.B?\n\n⚠️ TUTTI I DATI VERRANNO PERSI DEFINITIVAMENTE!`
+            `Formattare ${this.selectedDrive.mountPoint} e copiare M.I.B?\n\n⚠️ TUTTI I DATI VERRANNO PERSI DEFINITIVAMENTE!`
         );
 
         if (!confirmed) return;
@@ -216,7 +216,7 @@ class SDFormatterApp {
             this.showProgress('Formattazione in corso...', 0);
 
             const options = {
-                drivePath: this.selectedDrive.device,
+                drivePath: this.selectedDrive.mountPoint,
                 label:'SD_CARD',
             };
 

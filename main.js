@@ -76,12 +76,11 @@ ipcMain.handle('get-drives', async () => {
 
         const filteredDrives = drives.filter(drive => {
             const mount = (drive.mounted || '').toLowerCase();
-
+            
             if (platform === 'win32') {
-
-                // Skip if mount is 'C:\'
-                if (mount === 'C:\\') return false;
-                return mount;
+                // Escludi il disco C dalla lista
+                const isNonSystemDrive = mount && !mount.toLowerCase().startsWith('c:');
+                return isNonSystemDrive;
             }
 
             if (platform === 'darwin') {
@@ -195,7 +194,10 @@ ipcMain.handle('get-drives', async () => {
 
             if (os.platform() === 'win32') {
                 // Windows: usa format command - sempre formattazione completa (no /q)
-                command = `format ${drivePath} /fs:FAT32 /v:${label} /y`;
+
+                command = `echo.|format ${drivePath} /fs:FAT32 /v:${label}`;
+                console.log(command);
+
 
                 // Su Windows potrebbe servire eseguire come amministratore
                 const sudoOptions = {
