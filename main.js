@@ -19,16 +19,26 @@ if (process.argv.includes('--dev')) {
 }
 
 function createWindow() {
+
+    let iconPath;
+    if (process.platform === 'win32') {
+        iconPath = path.join(__dirname, 'assets/logo.ico');
+    } else if (process.platform === 'darwin') {
+        iconPath = path.join(__dirname, 'assets/logo.icns');
+    } else {
+        iconPath = path.join(__dirname, 'assets/logo.png');
+    }
+
     // Create the browser window
     mainWindow = new BrowserWindow({
         width: 900,
-        height: 1000,
+        height: 1100,
+        icon: iconPath,
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
             preload: path.join(__dirname, 'renderer', 'preload.js')
         },
-        icon: path.join(__dirname, 'assets', 'icon.png'),
         title: 'MIB SD Card Formatter',
         resizable: true,
         minWidth: 800,
@@ -129,7 +139,7 @@ ipcMain.handle('get-drives', async () => {
 // Use predefined M.I.B package instead of letting user select archive
     ipcMain.handle('select-archive', async () => {
         // Path to the predefined M.I.B package
-        const mibPackagePath = path.join(__dirname, 'assets', 'packages', 'M.I.B.zip');
+        const mibPackagePath = path.join(__dirname, 'assets', 'packages', 'M.I.B');
 
         // Verify the package exists
         if (fs.existsSync(mibPackagePath)) {
@@ -216,7 +226,7 @@ ipcMain.handle('get-drives', async () => {
             } else if (os.platform() === 'darwin') {
                 // Convert /dev/disk4s1 to /dev/disk4 for macOS
                 const wholeDiskPath = drivePath.replace(/s[0-9]+$/, '');
-                command = `diskutil eraseDisk FAT32 ${label} ${wholeDiskPath}`;
+                command = `diskutil eraseVolume FAT32 ${label} ${wholeDiskPath}`;
 
                 console.log(`Formatting whole disk: ${wholeDiskPath} (was: ${drivePath})`);
 
@@ -251,80 +261,62 @@ ipcMain.handle('get-drives', async () => {
         });
     });
 
-// Copy file from archive to SD card
-    ipcMain.handle('copy-file-to-sd', async (event, options) => {
-        const {targetPath} = options;
-        const appRootPath = app.getAppPath();
-        const archivePath = path.join(appRootPath, 'assets', 'packages', 'M.I.B.zip');
+// Copy all files from resources to SD card
+const fsExtra = require('fs-extra');
 
-        return new Promise((resolve, reject) => {
-            if (!fs.existsSync(archivePath)) {
-                reject(new Error(`ZIP file not found: ${archivePath}`));
-                return;
-            }
+ipcMain.handle('copy-file-to-sd', async (event, options) => {
+    const { targetPath } = options;
 
-            yauzl.open(archivePath, {lazyEntries: true}, (err, zipfile) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
+    // Percorso sorgente
+    const sourcePath = app.isPackaged
+        ? path.join(process.resourcesPath, 'app.asar.unpacked', 'assets', 'packages', 'M.I.B')
+        : path.join(app.getAppPath(), 'assets', 'packages', 'M.I.B');
 
-                let extractedFiles = 0;
+    try {
+        // Leggi contenuto cartella sorgente
+        const items = await fsExtra.readdir(sourcePath);
 
-                zipfile.readEntry();
-                zipfile.on('entry', (entry) => {
+        // Copia ogni elemento nella destinazione
+        for (const item of items) {
+            await fsExtra.copy(
+                path.join(sourcePath, item),
+                path.join(targetPath, item),
+                { overwrite: true }
+            );
+        }
 
-                    // Skip directories, __MACOSX folders, and hidden files
-                    if (entry.fileName.endsWith('/') ||
-                        entry.fileName.startsWith('__MACOSX') ||
-                        entry.fileName.startsWith('.') ||
-                        path.basename(entry.fileName).startsWith('.')) {
-                        zipfile.readEntry();
-                        return;
-                    }
+        return { success: true, fileCount: items.length };
 
-                    // Extract only the filename without path
-                    const fileName = path.basename(entry.fileName);
-                    const outputPath = path.join(targetPath, fileName);
+    } catch (err) {
+        throw new Error(`Errore copia: ${err.message}`);
+    }
+});
 
-                    zipfile.openReadStream(entry, (err, readStream) => {
-                        if (err) {
-                            reject(err);
-                            return;
-                        }
+// Handler aggiuntivo per ottenere informazioni sulla cartella sorgente
+ipcMain.handle('get-source-info', async (event) => {
+    const appRootPath = app.getAppPath();
+    const sourcePath = path.join(appRootPath, 'assets', 'packages', 'M.I.B');
+    
+    try {
+        if (!fs.existsSync(sourcePath)) {
+            return { exists: false, path: sourcePath };
+        }
+        
+        const stats = await fsExtra.stat(sourcePath);
+        const files = await fsExtra.readdir(sourcePath);
+        
+        return {
+            exists: true,
+            path: sourcePath,
+            isDirectory: stats.isDirectory(),
+            fileCount: files.length,
+            size: stats.size
+        };
+    } catch (err) {
+        return { exists: false, path: sourcePath, error: err.message };
+    }
+});
 
-                        const writeStream = fs.createWriteStream(outputPath);
-                        readStream.pipe(writeStream);
-
-                        writeStream.on('close', () => {
-                            extractedFiles++;
-                            zipfile.readEntry();
-                        });
-
-                        writeStream.on('error', (err) => {
-                            reject(err);
-                        });
-                    });
-                });
-
-                zipfile.on('end', () => {
-                    if (extractedFiles > 0) {
-                        resolve({
-                            success: true,
-                            outputPath: targetPath,
-                            fileCount: extractedFiles
-                        });
-                    } else {
-                        reject(new Error('Nessun file valido trovato nell\'archivio'));
-                    }
-                });
-
-                zipfile.on('error', (err) => {
-                    reject(err);
-                });
-            });
-        });
-    });
 
 // Show message box
     ipcMain.handle('show-message-box', async (event, options) => {
