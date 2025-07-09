@@ -50,7 +50,7 @@ MIB_TT_app/
 ├── assets/
 │   ├── icon.png
 │   └── packages/
-│       └── M.I.B.zip      # Predefined package to install
+│       └── M.I.B.         # Predefined package to install
 ├── renderer/
 │   ├── index.html         # Main application interface
 │   └── preload.js         # Preload script for renderer process
