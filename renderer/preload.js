@@ -1,8 +1,16 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+// Listen for activation request
+ipcRenderer.on('show-activation', () => {
+    document.dispatchEvent(new CustomEvent('show-activation'));
+});
+
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('electronAPI', {
+
+    activate: (data) => ipcRenderer.invoke('activate-app', data),
+
     // Drive operations
     getDrives: () => ipcRenderer.invoke('get-drives'),
 
@@ -16,6 +24,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     // UI operations
     showMessageBox: (options) => ipcRenderer.invoke('show-message-box', options)
-
 
 });

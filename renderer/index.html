@@ -8,6 +8,18 @@
 </head>
 <body>
 
+<div id="activationModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <h2>App Activation</h2>
+        <label>username:</label>
+        <textarea id="activationUsername"></textarea>
+        <label>Chiave:</label>
+        <textarea id="activationMessage"></textarea>
+        <button id="activateBtn">Activate</button>
+        <div id="activationError" style="color:red;"></div>
+    </div>
+</div>
+
 <div id="loadingOverlay">
     <div class="loaderWrapper">
         <div class="loaderRing"></div>
@@ -16,6 +28,7 @@
         </div>
     </div>
 </div>
+
 
 <div class="container">
     <header>

@@ -7,6 +7,25 @@ const diskinfo = require('node-disk-info');
 const yauzl = require('yauzl');
 const sudoPrompt = require('sudo-prompt');
 
+const crypto = require('crypto');
+let store;
+
+(async () => {
+    const { default: Store } = await import('electron-store');
+    store = new Store();
+
+    app.whenReady().then(() => {
+        createWindow();
+
+        setTimeout(() => {
+            if (!store.get('activated')) {
+                showActivationWindow();
+            }
+        }, 200);
+
+    });
+})();
+
 // Keep a global reference of the window object
 let mainWindow;
 
@@ -35,9 +54,9 @@ function createWindow() {
         height: 1100,
         icon: iconPath,
         webPreferences: {
+            preload: path.join(__dirname, 'renderer/preload.js'),
             nodeIntegration: false,
-            contextIsolation: true,
-            preload: path.join(__dirname, 'renderer', 'preload.js')
+            contextIsolation: true
         },
         title: 'MIB SD Card Formatter',
         resizable: true,
@@ -59,8 +78,6 @@ function createWindow() {
     });
 }
 
-// This method will be called when Electron has finished initialization
-app.whenReady().then(createWindow);
 
 // Quit when all windows are closed
 app.on('window-all-closed', () => {
@@ -319,7 +336,62 @@ ipcMain.handle('get-source-info', async (event) => {
 
 
 // Show message box
-    ipcMain.handle('show-message-box', async (event, options) => {
-        const result = await dialog.showMessageBox(mainWindow, options);
-        return result;
-    });
+ipcMain.handle('show-message-box', async (event, options) => {
+    const result = await dialog.showMessageBox(mainWindow, options);
+    return result;
+});
+
+
+// Activate app
+ipcMain.handle('activate-app', async (event, activationInput) => {
+    //const activationData = store.get('activation');
+
+    console.log("activating" + activationInput.message + " " + activationInput.username);
+
+    // Check if activation data is already present
+    if (store.get('activated')) {
+        console.log("App already activated");
+        return {success: true};
+    }
+
+    try {
+        const message = activationInput.message
+        const username = activationInput.username;
+        const isValid = verifySignature(message, username);
+
+        if (isValid) {
+            store.set('activation', {message, username});
+            console.log('App activated successfully');
+            //salvo flag di attivazione
+            store.set('activated', true);
+
+            return {success: true};
+        } else {
+            return {success: false, error: 'Firma non valida'};
+        }
+    } catch (error) {
+        console.error('Activation error:', error);
+        return {success: false, error: error.message};
+    }
+
+});
+
+// Verify signature function
+function verifySignature(message, username) {
+    const string = "AudiTTmk3Ita"
+    //controllo che lo username + string hashato sia uguale allla chiave
+    const hash = crypto.createHash('sha256').update(username + string).digest('hex');
+    if (hash === message) {
+        return true;
+    }
+    return false;
+
+}
+
+// Create activation window
+function showActivationWindow() {
+    if (mainWindow) {
+        // Send message to renderer to show activation UI
+        mainWindow.webContents.send('show-activation');
+    }
+}

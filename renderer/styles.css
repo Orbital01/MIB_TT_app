@@ -513,3 +513,80 @@ small {
 .scrollable-element::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Opera */
 }
+
+.modal {
+    display: none; /* Di default nascosta */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0,0,0,0.5); /* Sfondo scuro trasparente */
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.3s ease;
+}
+
+.modal.show {
+    display: flex;
+    opacity: 1;
+    animation: modalFadeIn 0.3s;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.modal-content {
+    background: #fff;
+    margin: auto;
+    padding: 32px 24px 24px 24px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: modalContentFadeIn 0.3s;
+}
+
+@keyframes modalContentFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #222;
+}
+
+.modal-content input, .modal-content textarea {
+    width: 100%;
+    margin-bottom: 16px;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+.modal-content button {
+    background: #0078d7;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 24px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.modal-content button:hover {
+    background: #005fa3;
+}

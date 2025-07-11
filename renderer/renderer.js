@@ -44,10 +44,23 @@ class SDFormatterApp {
         this.logOutput = document.getElementById('logOutput');
         this.clearLogBtn = document.getElementById('clearLog');
 
-        // In your initializeElements() method
+        // Activation elements
+        this.activateBtn = document.getElementById('activateBtn');
+        this.activationMessage = document.getElementById('activationMessage');
+        this.activationUsername = document.getElementById('activationUsername');
+        this.activationError = document.getElementById('activationError');
     }
 
     bindEvents() {
+
+        document.addEventListener('show-activation', () => {
+            const modal = document.getElementById('activationModal');
+            modal.classList.add('show');
+            modal.style.display = 'block'; // Make sure it's visible
+
+            console.log('Activation modal should be visible now');
+        });
+
         // Drive events
         this.driveSelect.addEventListener('change', () => this.onDriveSelect());
         this.refreshDrivesBtn.addEventListener('click', () => this.refreshDrives());
@@ -60,6 +73,24 @@ class SDFormatterApp {
             console.log('Format and Copy button clicked');
             this.log('Format and Copy button clicked');
             this.formatAndCopy();
+        });
+
+        this.activateBtn.addEventListener('click', async () => {
+            console.log('Activation button clicked');
+
+            const chiave = this.activationMessage.value;
+            const username = this.activationUsername.value;
+
+            if (!chiave || !username) {
+                this.activationError.innerText = 'Inserisci sia username che chiave';
+                return;
+            }
+
+            try {
+                await this.verifyHash(chiave, username);
+            } catch (error) {
+                this.activationError.innerText = "Errore durante l'attivazione:" + error.message;
+            }
         });
     }
 
@@ -370,6 +401,45 @@ class SDFormatterApp {
             setTimeout(() => {
                 this.loadingOverlay.style.display = 'none';
             }, 500);
+        }
+    }
+
+    async verifyHash(message, username) {
+        try {
+            // Assicuriamoci che i parametri siano definiti
+            if (!message || !username) {
+                return { success: false, error: "Username e chiave sono richiesti" };
+            }
+
+            // Passiamo i parametri come oggetto come previsto nel main.js
+            const result = await window.electronAPI.activate({ message, username });
+            console.log('Risultato della verifica dell\'hash:', result);
+
+            // Se result è undefined, restituiamo un oggetto con success: false
+            if (!result) {
+                return { success: false, error: "error" };
+            }
+            //se result.success è true, l'attivazione è andata a buon fine e faccio sparire la finestra di attivazione
+            if (result.success) {
+                this.activationMessage.value = ''; // Pulisci il campo della chiave
+                this.activationUsername.value = ''; // Pulisci il campo dell'username
+                this.activationError.innerText = ''; // Pulisci eventuali errori
+
+                const modal = document.getElementById('activationModal');
+                modal.classList.remove('show');
+                modal.style.display = 'none'; // Explicitly hide the element
+
+                this.log('Attivazione completata con successo!');
+                return { success: true };
+            } else {
+                this.activationError.innerText = result.error || 'Errore sconosciuto durante l\'attivazione';
+                return { success: false, error: result.error || 'Errore sconosciuto' };
+            }
+
+
+        } catch (error) {
+            console.error('Errore durante la verifica dell\'hash:', error);
+            return { success: false, error: `Errore durante la verifica: ${error.message}` };
         }
     }
 }
